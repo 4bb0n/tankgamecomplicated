@@ -29,10 +29,10 @@ class Tank {
     
 
     move() {
-        if (keys.has("ArrowUp") || keys.has("w")){this.y -= this.speed; enemies.forEach(enemy => {enemy.y += this.speed}); this.mapPosition.y = this.y}
-        if (keys.has("ArrowDown") || keys.has("s")) {this.y += this.speed; enemies.forEach(enemy => {enemy.y -= this.speed}) ; this.mapPosition.y = this.y}
-        if (keys.has("ArrowLeft") || keys.has("a")) {this.x -= this.speed; enemies.forEach(enemy => {enemy.x += this.speed}); this.mapPosition.x = this.x}
-        if (keys.has("ArrowRight") || keys.has("d")) {this.x += this.speed; enemies.forEach(enemy => {enemy.x -= this.speed}); this.mapPosition.x = this.x}
+        if (keys.has("ArrowUp") || keys.has("w")){this.y -= this.speed; enemies.forEach(enemy => {enemy.y += this.speed}); this.mapPosition.y = this.y; bullets.forEach(bullet => {bullet.y += this.speed});}
+        if (keys.has("ArrowDown") || keys.has("s")) {this.y += this.speed; enemies.forEach(enemy => {enemy.y -= this.speed}) ; this.mapPosition.y = this.y; bullets.forEach(bullet => {bullet.y -= this.speed});}
+        if (keys.has("ArrowLeft") || keys.has("a")) {this.x -= this.speed; enemies.forEach(enemy => {enemy.x += this.speed}); this.mapPosition.x = this.x; bullets.forEach(bullet => {bullet.x += this.speed});}
+        if (keys.has("ArrowRight") || keys.has("d")) {this.x += this.speed; enemies.forEach(enemy => {enemy.x -= this.speed}); this.mapPosition.x = this.x; bullets.forEach(bullet => {bullet.x -= this.speed});}
         if (keys.has(" ") && reloaded){
             shootBullet();
             reloaded = false;
@@ -56,7 +56,7 @@ class Tank {
         ctx.fillStyle = 'red'
         ctx.fillRect(-this.diameter / 2, -this.diameter / 2 - 10, 80, 5);
         ctx.fillStyle = 'green';
-        ctx.fillRect(-this.diameter / 2, -this.diameter / 2 - 10, this.health * 2, 5);
+        ctx.fillRect(-this.diameter / 2, -this.diameter / 2 - 10, 80 / 135 * this.health, 5);
     
         // Draw the nozzle correctly relative to the tank's center
         ctx.fillStyle = 'lightgray';
@@ -101,7 +101,7 @@ class Enemy {
         ctx.fillStyle = 'red'
         ctx.fillRect(-this.diameter / 2, -this.diameter / 2 - 10, 80, 5);
         ctx.fillStyle = 'green';
-        ctx.fillRect(-this.diameter / 2, -this.diameter / 2 - 10, this.health * 2, 5);
+        ctx.fillRect(-this.diameter / 2, -this.diameter / 2 - 10, 80 / 135 * this.health, 5);
     
         // Draw the nozzle correctly relative to the tank's center
         ctx.fillStyle = 'lightgray';
@@ -219,7 +219,9 @@ socket.on("hitSuccess", (index) => {
 })
 
 socket.on("hitBullet", (id, bullet, damage) => {
-    receivedBullets.splice(receivedBullets.indexOf(bullet), 1);
+    receivedBullets.forEach((bullet, index) => {
+        receivedBullets.splice(index, 1);
+    })
     tank.health -= damage;
     if(tank.health <= 0){
         socket.emit("died", tank.id);
@@ -391,8 +393,10 @@ function tick() {
     })
     */
     if(tank.health <= 0){
-        tank.x = 100000
-        tank.y = 100000
+        tank.mapPosition.x = 100000
+        tank.mapPosition.y = 100000
+        clearInterval(tickInterval)
+        tank = undefined;
     }
         socket.emit("tankInfo", tank);
         socket.emit("bulletInfo", bulletsForEnemies)
