@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
                 players2.push(players[key]);
             }
         }
-        socket.broadcast.emit("returnEnemies", players2);
+        socket.emit("returnEnemies", players2);
     });
 
     socket.on("bulletInfo", (data) => {
