@@ -18,24 +18,70 @@ class Tank {
         this.health = health;
         this.diameter = 30;
         this.id = id
+        this.mapPosition = {x: canvas.width / 2, y: canvas.height / 2};
     }
 
     updateAngle(mouseX, mouseY) {
-        const dx = mouseX - this.x;  // Use tank's center (not x + width / 2)
-        const dy = mouseY - this.y;
+        const dx = mouseX - canvas.width / 2;  // Use tank's center (not x + width / 2)
+        const dy = mouseY - canvas.height / 2;
         this.angle = Math.atan2(dy, dx);
     }
     
 
     move() {
-        if (keys.has("ArrowUp")) this.y -= this.speed;
-        if (keys.has("ArrowDown")) this.y += this.speed;
-        if (keys.has("ArrowLeft")) this.x -= this.speed;
-        if (keys.has("ArrowRight")) this.x += this.speed;
+        if (keys.has("ArrowUp") || keys.has("w")){this.y -= this.speed; enemies.forEach(enemy => {enemy.y += this.speed}); this.mapPosition.y = this.y}
+        if (keys.has("ArrowDown") || keys.has("s")) {this.y += this.speed; enemies.forEach(enemy => {enemy.y -= this.speed}) ; this.mapPosition.y = this.y}
+        if (keys.has("ArrowLeft") || keys.has("a")) {this.x -= this.speed; enemies.forEach(enemy => {enemy.x += this.speed}); this.mapPosition.x = this.x}
+        if (keys.has("ArrowRight") || keys.has("d")) {this.x += this.speed; enemies.forEach(enemy => {enemy.x -= this.speed}); this.mapPosition.x = this.x}
         if (keys.has(" ") && reloaded){
             shootBullet();
             reloaded = false;
         }
+    }
+
+    display() {
+        ctx.fillStyle = this.colour;
+        
+        // Draw tank body (circle)
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, this.diameter, 0, 2 * Math.PI);
+        ctx.fill();
+    
+        // Save state and move origin to tank center
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(this.angle);
+
+        // Make health bar
+        ctx.fillStyle = 'red'
+        ctx.fillRect(-this.diameter / 2, -this.diameter / 2 - 10, 80, 5);
+        ctx.fillStyle = 'green';
+        ctx.fillRect(-this.diameter / 2, -this.diameter / 2 - 10, this.health * 2, 5);
+    
+        // Draw the nozzle correctly relative to the tank's center
+        ctx.fillStyle = 'lightgray';
+        ctx.fillRect(this.diameter - 5, -5, 30, 10); // Adjusted position
+    
+        ctx.restore();
+    }
+}
+
+class Enemy {
+    constructor(x, y, width, height, angle, health, bodyDamage, bulletSpeed, bulletPenetration, movementSpeed, regeneration, colour, id) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.angle = angle;
+        this.speed = movementSpeed;
+        this.regeneration = regeneration
+        this.bodyDamage = bodyDamage;
+        this.bulletSpeed = bulletSpeed;
+        this.bulletPenetration = bulletPenetration;
+        this.colour = colour
+        this.health = health;
+        this.diameter = 30;
+        this.id = id
     }
 
     display() {
@@ -90,8 +136,17 @@ class Bullet {
         ctx.fill();
     }
 }
+let mapCanvas = {
+    width: 2400,
+    height: 1400
+}
+let mapPosition = {
+    x: mapCanvas.width / 2,
+    y: mapCanvas.height / 2
+}
+let movementSpeed = 2;
 let bulletSpeed = 2;
-let tank = new Tank(100, 100, 50, 50, 0, 40, 2, bulletSpeed, 0, 2, 0, '#1db4de', socket.id);
+let tank = new Tank(canvas.width / 2, canvas.height / 2, 50, 50, 0, 40, 2, bulletSpeed, 0, movementSpeed, 0, '#1db4de', socket.id);
 let enemies = [];
 let bullets = [];
 const keys = new Set(); // Store pressed keys
@@ -100,6 +155,7 @@ let bodyDamage = 0;
 let reloaded = true;
 let receivedBullets = []
 let upgradesLeft = 42;
+let bulletsForEnemies = [];
 /*
 socket.on("bodyDmg", (firstPlayerId, firstHealth, secondPlayerId, secondHealth) => {
     if(secondPlayerId == socket.id){
@@ -136,17 +192,34 @@ socket.on("removeBullet", (index, id) => {
 socket.on("returnEnemies", (data) => {
     enemies = [];
     data.forEach(enemy => {
-    enemies.push(new Tank(enemy.x, enemy.y, enemy.width, enemy.height, enemy.angle, enemy.health, enemy.bodyDamage, enemy.bulletSpeed, enemy.bulletPenetration, enemy.movementSpeed, enemy.regeneration, enemy.colour, enemy.id));
-    })
-})
+        const screenX = enemy.mapPosition.x - tank.x + canvas.width / 2;
+        const screenY = enemy.mapPosition.y - tank.y + canvas.height / 2;
+        enemies.push(new Enemy(
+            screenX,
+            screenY,
+            enemy.width,
+            enemy.height,
+            enemy.angle,
+            enemy.health,
+            enemy.bodyDamage,
+            enemy.bulletSpeed,
+            enemy.bulletPenetration,
+            enemy.movementSpeed,
+            enemy.regeneration,
+            enemy.colour,
+            enemy.id
+        ));
+    });
+});
+
 
 socket.on("hitSuccess", (index) => {
     bullets.splice(index, 1);
     console.log("hit");
 })
 
-socket.on("hitBullet", (id, index, damage) => {
-    receivedBullets.splice(index, 1);
+socket.on("hitBullet", (id, bullet, damage) => {
+    receivedBullets.splice(receivedBullets.indexOf(bullet), 1);
     tank.health -= damage;
     if(tank.health <= 0){
         socket.emit("died", tank.id);
@@ -215,11 +288,13 @@ function shootBullet() {
     const nozzleLength = 30; // The length of the nozzle
 
     // Calculate the bullet's starting position at the end of the nozzle
-    const bulletX = tank.x + Math.cos(tank.angle) * (tank.diameter / 2 + nozzleLength - 15);
-    const bulletY = tank.y + Math.sin(tank.angle) * (tank.diameter / 2 + nozzleLength - 15);
-    
+    const bulletX = tank.x + Math.cos(tank.angle) * (tank.diameter / 2 + nozzleLength);
+    const bulletY = tank.y + Math.sin(tank.angle) * (tank.diameter / 2 + nozzleLength);
+    bulletsForEnemies.push(new Bullet(bulletX, bulletY, tank.angle, socket.id, bulletSpeed));
 
-    bullets.push(new Bullet(bulletX, bulletY, tank.angle, socket.id, bulletSpeed));
+    const bulletX2 = canvas.width / 2 + Math.cos(tank.angle) * (tank.diameter / 2 + nozzleLength);
+    const bulletY2 = canvas.height / 2 + Math.sin(tank.angle) * (tank.diameter / 2 + nozzleLength);
+    bullets.push(new Bullet(bulletX2, bulletY2, tank.angle, socket.id, bulletSpeed));
 }
 
 function draw() {
@@ -233,6 +308,14 @@ function draw() {
         
         if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
             bullets.splice(index, 1);
+        }
+    });
+
+    bulletsForEnemies.forEach((bullet, index) => {
+        bullet.update();
+        
+        if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
+            bulletsForEnemies.splice(index, 1);
         }
     });
 
@@ -264,7 +347,7 @@ function tick() {
                 setTimeout(() => {
                     enemy.colour = 'lime'
                 }, 100);
-                socket.emit("hitBullet", bullet.id, index, damage);
+                socket.emit("hitBullet", bullet.id, index, bullet, damage);
             }
         })
         if(enemy.health <= 0){
@@ -312,7 +395,7 @@ function tick() {
         tank.y = 100000
     }
         socket.emit("tankInfo", tank);
-        socket.emit("bulletInfo", bullets)
+        socket.emit("bulletInfo", bulletsForEnemies)
         socket.emit("getEnemies");
 }
 let tickInterval = setInterval(tick, 25)
