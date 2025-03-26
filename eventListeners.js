@@ -60,3 +60,12 @@ document.getElementById("bulletSpeed").addEventListener("click", () => {
     document.getElementById("upgradesLeft").innerHTML = upgradesLeft;
     }
 })
+document.getElementById("movementSpeed").addEventListener("click", () => {
+    const movementSpeed2 = document.getElementById("movementSpeed");
+    if(movementSpeed2.value < movementSpeed2.max){
+    document.getElementById("movementSpeed").value += 1;
+    tank.speed += 0.5
+    upgradesLeft -= 1
+    document.getElementById("upgradesLeft").innerHTML = upgradesLeft;
+    }
+})
