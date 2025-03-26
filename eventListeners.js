@@ -50,3 +50,13 @@ document.getElementById("bulletPenetration").addEventListener("click", () => {
     document.getElementById("upgradesLeft").innerHTML = upgradesLeft;
     }
 })
+
+document.getElementById("bulletSpeed").addEventListener("click", () => {
+    const bulletSpeed2 = document.getElementById("bulletSpeed");
+    if(bulletSpeed2.value < bulletSpeed2.max){
+    document.getElementById("bulletSpeed").value += 1;
+    bulletSpeed += 1
+    upgradesLeft -= 1
+    document.getElementById("upgradesLeft").innerHTML = upgradesLeft;
+    }
+})
