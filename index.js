@@ -65,7 +65,33 @@ class Tank {
     }
 }
 
-let tank = new Tank(100, 100, 50, 50, 0, 40, 2, 1, 0, 2, 0, '#1db4de', socket.id);
+class Bullet {
+    constructor(x, y, angle, owner, speed) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.speed = speed;
+        this.radius = 10;
+        this.id = owner
+        this.diameter = 20;
+        this.colour = '#1db4de'
+        this.penetration = 0;
+    }
+
+    update() {
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+    }
+
+    display() {
+        ctx.fillStyle = this.colour;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+}
+let bulletSpeed = 2;
+let tank = new Tank(100, 100, 50, 50, 0, 40, 2, bulletSpeed, 0, 2, 0, '#1db4de', socket.id);
 let enemies = [];
 let bullets = [];
 const keys = new Set(); // Store pressed keys
@@ -133,7 +159,7 @@ socket.on("bulletInfo", (data) => {
     receivedBullets = [];
     data.forEach((bullet) => {
         bullet.colour = 'red'
-        receivedBullets.push(new Bullet(bullet.x, bullet.y, bullet.angle, bullet.id));
+        receivedBullets.push(new Bullet(bullet.x, bullet.y, bullet.angle, bullet.id, bullet.speed));
     })
 })
 /*
@@ -193,33 +219,7 @@ function shootBullet() {
     const bulletY = tank.y + Math.sin(tank.angle) * (tank.diameter / 2 + nozzleLength - 15);
     
 
-    bullets.push(new Bullet(bulletX, bulletY, tank.angle));
-}
-
-class Bullet {
-    constructor(x, y, angle, owner) {
-        this.x = x;
-        this.y = y;
-        this.angle = angle;
-        this.speed = 5;
-        this.radius = 10;
-        this.id = owner
-        this.diameter = 20;
-        this.colour = '#1db4de'
-        this.penetration = 0;
-    }
-
-    update() {
-        this.x += Math.cos(this.angle) * this.speed;
-        this.y += Math.sin(this.angle) * this.speed;
-    }
-
-    display() {
-        ctx.fillStyle = this.colour;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        ctx.fill();
-    }
+    bullets.push(new Bullet(bulletX, bulletY, tank.angle, socket.id, bulletSpeed));
 }
 
 function draw() {
