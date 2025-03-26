@@ -6,6 +6,11 @@ const io = require('socket.io')(server);
 
 let players = {};
 let playersBullets = {};
+let bulletArray = []
+const canvas = {
+    width: 2400,
+    height: 1400,
+};
 
 app.get('/eventListeners.js', (req, res) => {
     res.sendFile(__dirname + '/eventListeners.js');
@@ -38,14 +43,13 @@ io.on('connection', (socket) => {
         }
         socket.emit("returnEnemies", players2);
     });
-
     socket.on("bulletInfo", (data) => {
         playersBullets[socket.id] = data;
         socket.broadcast.emit("bulletInfo", data);
     });
-    socket.on("hitBullet", (id, index, damage) => {
-        socket.broadcast.emit("hitBullet", id, index, damage);
-        socket.emit("hitSuccess", index);
+    socket.on("hitBullet", (id, index, bullet, damage) => {
+        socket.broadcast.emit("hitBullet", id, bullet, damage);
+        socket.emit("hitSuccess");
     })
     socket.on("removeBullet", (index, id) => {
         socket.broadcast.emit("removeBullet", index, id)
