@@ -40,6 +40,7 @@ class Tank {
     }
 
     display() {
+        ctx.globalAlpha = 1;
         ctx.fillStyle = this.colour;
         
         // Draw tank body (circle)
@@ -67,7 +68,7 @@ class Tank {
 }
 
 class Enemy {
-    constructor(x, y, width, height, angle, health, bodyDamage, bulletSpeed, bulletPenetration, movementSpeed, regeneration, colour, id) {
+    constructor(x, y, width, height, angle, health, bodyDamage, bulletSpeed, bulletPenetration, movementSpeed, regeneration, colour, id, mapPosition) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -82,9 +83,11 @@ class Enemy {
         this.health = health;
         this.diameter = 30;
         this.id = id
+        this.mapPosition = mapPosition;
     }
 
     display() {
+        ctx.globalAlpha = 1;
         ctx.fillStyle = this.colour;
         
         // Draw tank body (circle)
@@ -130,6 +133,7 @@ class Bullet {
     }
 
     display() {
+        ctx.globalAlpha = 1;
         ctx.fillStyle = this.colour;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
@@ -146,19 +150,21 @@ class Map{
         this.enemies = enemies;
     }
     display(){
+        ctx.globalAlpha = 0.5
         ctx.fillStyle = 'lightgray';
         ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.rect(this.x, this.y, this.width, this.height);
 
+        ctx.globalAlpha = 1;
         ctx.fillStyle = 'black';
         ctx.beginPath();
-        ctx.arc(this.playerPosition.x / 10 + this.width * 2 - 30, this.playerPosition.y / 10 + this.height * 2 - 30, 5, 0, 2 * Math.PI);
+        ctx.arc(this.playerPosition.x / 10 + this.x + 100, this.playerPosition.y / 10 + this.y + 100, 5, 0, 2 * Math.PI);
         ctx.fill();
 
         this.enemies.forEach(enemy => {
             ctx.fillStyle = 'red';
             ctx.beginPath();
-            ctx.arc(enemy.x / 10 + this.width * 2 - 30, enemy.y / 10 + this.height * 2 - 30, 5, 0, 2 * Math.PI);
+            ctx.arc(enemy.mapPosition.x / 10 + this.x + 100, enemy.mapPosition.y / 10 + this.y + 100, 5, 0, 2 * Math.PI);
             ctx.fill();
         })
     }
@@ -244,7 +250,8 @@ socket.on("returnEnemies", (data) => {
             enemy.movementSpeed,
             enemy.regeneration,
             enemy.colour,
-            enemy.id
+            enemy.id,
+            enemy.mapPosition
         ));
     });
 });
