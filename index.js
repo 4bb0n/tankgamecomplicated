@@ -136,6 +136,33 @@ class Bullet {
         ctx.fill();
     }
 }
+class Map{
+    constructor(x, y, width, height, playerPosition, enemies){
+        this.width = width;
+        this.height = height;
+        this.x = x;
+        this.y = y;
+        this.playerPosition = playerPosition;
+        this.enemies = enemies;
+    }
+    display(){
+        ctx.fillStyle = 'lightgray';
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.rect(this.x, this.y, this.width, this.height);
+
+        ctx.fillStyle = 'black';
+        ctx.beginPath();
+        ctx.arc(this.playerPosition.x / 10 + this.width * 2 - 30, this.playerPosition.y / 10 + this.height * 2 - 30, 5, 0, 2 * Math.PI);
+        ctx.fill();
+
+        this.enemies.forEach(enemy => {
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(enemy.x / 10 + this.width * 2 - 30, enemy.y / 10 + this.height * 2 - 30, 5, 0, 2 * Math.PI);
+            ctx.fill();
+        })
+    }
+}
 let mapCanvas = {
     width: 2400,
     height: 1400
@@ -146,8 +173,9 @@ let mapPosition = {
 }
 let movementSpeed = 2;
 let bulletSpeed = 2;
-let tank = new Tank(canvas.width / 2, canvas.height / 2, 50, 50, 0, 40, 2, bulletSpeed, 0, movementSpeed, 0, '#1db4de', socket.id);
 let enemies = [];
+let tank = new Tank(canvas.width / 2, canvas.height / 2, 50, 50, 0, 40, 2, bulletSpeed, 0, movementSpeed, 0, '#1db4de', socket.id);
+let map = new Map(canvas.width - 480, canvas.height - 280, 480, 280, tank.mapPosition, enemies);
 let bullets = [];
 const keys = new Set(); // Store pressed keys
 let reloadSpeed = 400;
@@ -168,6 +196,15 @@ socket.on("bodyDmg", (firstPlayerId, firstHealth, secondPlayerId, secondHealth) 
     })
 })
 */
+
+socket.on("enemyDied", id => {
+    enemies.forEach((enemy) => {
+        if(enemy.id == id){
+            enemies.splice(enemies.indexOf(enemy), 1);
+        }
+    })
+    console.log("received")
+})
 
 socket.on("removeBulletAndChangePenetration", (firstBullet, secondIndex, secondBullet) => {
     if(firstBullet.id !== socket.id){
@@ -327,6 +364,7 @@ function draw() {
     receivedBullets.forEach((bullet) => {
         bullet.display();
     });
+    map.display();
 
     requestAnimationFrame(draw);
 }
@@ -398,6 +436,8 @@ function tick() {
         clearInterval(tickInterval)
         tank = undefined;
     }
+    map.playerPosition = tank.mapPosition;
+    map.enemies = enemies;
         socket.emit("tankInfo", tank);
         socket.emit("bulletInfo", bulletsForEnemies)
         socket.emit("getEnemies");
