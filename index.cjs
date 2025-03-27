@@ -60,6 +60,9 @@ io.on('connection', (socket) => {
     socket.on("bodyDmg", (firstPlayerId, firstHealth, secondPlayerId, secondHealth) => {
         socket.emit("bodyDmg", firstPlayerId, firstHealth, secondPlayerId, secondHealth)
     })
+    socket.on("died", (id) => {
+        socket.broadcast.emit("enemyDied", id)
+    })
 });
 
 server.listen(3000, () => {
