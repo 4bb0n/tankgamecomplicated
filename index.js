@@ -1,9 +1,11 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const socket = io();
+let offsetx = 0;
+let offsety = 0;
 
 class Tank {
-    constructor(x, y, width, height, angle, health, bodyDamage, bulletSpeed, bulletPenetration, movementSpeed, regeneration, colour, id, immune) {
+    constructor(x, y, width, height, angle, health, bodyDamage, bulletSpeed, bulletPenetration, movementSpeed, regeneration, colour, id, immune, maxHealth) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -16,6 +18,7 @@ class Tank {
         this.bulletPenetration = bulletPenetration;
         this.colour = colour
         this.health = health;
+        this.maxHealth = maxHealth;
         this.diameter = 30;
         this.id = id
         this.mapPosition = {x: canvas.width / 2, y: canvas.height / 2};
@@ -30,10 +33,10 @@ class Tank {
     
 
     move() {
-        if (keys.has("ArrowUp") || keys.has("w")){this.y -= this.speed; enemies.forEach(enemy => {enemy.y += this.speed}); this.mapPosition.y = this.y; bullets.forEach(bullet => {bullet.y += this.speed}); mazeBlocks.forEach(block => {block.y += this.speed}); immune = false}
-        if (keys.has("ArrowDown") || keys.has("s")) {this.y += this.speed; enemies.forEach(enemy => {enemy.y -= this.speed}) ; this.mapPosition.y = this.y; bullets.forEach(bullet => {bullet.y -= this.speed}); mazeBlocks.forEach(block => {block.y -= this.speed}); immune = false}
-        if (keys.has("ArrowLeft") || keys.has("a")) {this.x -= this.speed; enemies.forEach(enemy => {enemy.x += this.speed}); this.mapPosition.x = this.x; bullets.forEach(bullet => {bullet.x += this.speed}); mazeBlocks.forEach(block => {block.x += this.speed}); immune = false}
-        if (keys.has("ArrowRight") || keys.has("d")) {this.x += this.speed; enemies.forEach(enemy => {enemy.x -= this.speed}); this.mapPosition.x = this.x; bullets.forEach(bullet => {bullet.x -= this.speed}); mazeBlocks.forEach(block => {block.x -= this.speed}); immune = false}
+        if (keys.has("ArrowUp") || keys.has("w")){this.y -= this.speed; enemies.forEach(enemy => {enemy.y += this.speed}); this.mapPosition.y = this.y; bullets.forEach(bullet => {bullet.y += this.speed}); mazeBlocks.forEach(block => {block.y += this.speed}); immune = false; offsety += this.speed;}
+        if (keys.has("ArrowDown") || keys.has("s")) {this.y += this.speed; enemies.forEach(enemy => {enemy.y -= this.speed}) ; this.mapPosition.y = this.y; bullets.forEach(bullet => {bullet.y -= this.speed}); mazeBlocks.forEach(block => {block.y -= this.speed}); immune = false; offsety -= this.speed;}
+        if (keys.has("ArrowLeft") || keys.has("a")) {this.x -= this.speed; enemies.forEach(enemy => {enemy.x += this.speed}); this.mapPosition.x = this.x; bullets.forEach(bullet => {bullet.x += this.speed}); mazeBlocks.forEach(block => {block.x += this.speed}); immune = false; offsetx += this.speed}
+        if (keys.has("ArrowRight") || keys.has("d")) {this.x += this.speed; enemies.forEach(enemy => {enemy.x -= this.speed}); this.mapPosition.x = this.x; bullets.forEach(bullet => {bullet.x -= this.speed}); mazeBlocks.forEach(block => {block.x -= this.speed}); immune = false; offsetx -= this.speed}
         if (keys.has(" ") && reloaded){
             shootBullet();
             reloaded = false;
@@ -185,9 +188,33 @@ class MazeBlock{
         this.height = height;
     }
     display(){
-        ctx.globalAlpha = 0.8;
+        ctx.globalAlpha = 1;
         ctx.fillStyle = 'gray';
         ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+}
+class Boss{
+    constructor(x, y, width, height, angle, health, bodyDamage, bulletSpeed, bulletPenetration, movementSpeed, regeneration, colour, id, mapPosition){
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.angle = angle;
+        this.speed = movementSpeed;
+        this.regeneration = regeneration
+        this.bodyDamage = bodyDamage;
+        this.bulletSpeed = bulletSpeed;
+        this.bulletPenetration = bulletPenetration;
+        this.colour = colour;
+        this.health = health;
+        this.diameter = 60;
+        this.id = id
+        this.mapPosition = mapPosition;
+    }
+    display(){    
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = this.colour;
+        ctx.arc(this.x, this.y, this.diameter, 0, 2 * Math.PI);
     }
 }
 
@@ -199,13 +226,53 @@ let mapPosition = {
     x: mapCanvas.width / 2,
     y: mapCanvas.height / 2
 }
+class Dominator{
+    constructor(x, y, width, height, angle, health, bodyDamage, bulletSpeed, bulletPenetration, movementSpeed, regeneration, colour, id, mapPosition){
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.angle = angle;
+        this.speed = movementSpeed;
+        this.regeneration = regeneration
+        this.bodyDamage = bodyDamage;
+        this.bulletSpeed = bulletSpeed;
+        this.bulletPenetration = bulletPenetration;
+        this.colour = colour;
+        this.health = health;
+        this.diameter = 60;
+        this.id = id
+        this.mapPosition = mapPosition;
+    }
+    display(){
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = this.colour;
+        ctx.arc(this.x, this.y, this.diameter, 0, 2 * Math.PI);
+    }
+}
+class BulletForEnemies{
+    constructor(x, y, angle, owner, speed) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.speed = speed;
+        this.radius = 10;
+        this.id = owner
+        this.diameter = 20;
+        this.colour = 'red'
+        this.penetration = 0;
+    }
+}
 let movementSpeed = 2;
 let bulletSpeed = 2;
 let enemies = [];
 let mazeBlocks = []
 let immune = true;
-let tank = new Tank(canvas.width / 2, canvas.height / 2, 50, 50, 0, 140, 2, bulletSpeed, 0, movementSpeed, 0, '#1db4de', socket.id, immune);
+let maxHealth = 140;
+let dominators = [new Dominator(canvas.height / 2, canvas.height / 2, 50, 50, 0, 140, 2, bulletSpeed, 0, movementSpeed, 0, 'green', socket.id, mapPosition)];
+let tank = new Tank(canvas.width / 2, canvas.height / 2, 50, 50, 0, 140, 2, bulletSpeed, 0, movementSpeed, 0, '#1db4de', socket.id, immune, maxHealth);
 let map = new Map(canvas.width - 480, canvas.height - 280, 480, 280, tank.mapPosition, enemies, mazeBlocks);
+let boss = new Boss(canvas.width / 2, canvas.height / 2, 50, 50, 0, 2000, 2, bulletSpeed, 0, movementSpeed, 0, 'red', socket.id, mapPosition);
 let bullets = [];
 const keys = new Set(); // Store pressed keys
 let reloadSpeed = 400;
@@ -287,6 +354,7 @@ socket.on("returnEnemies", (data) => {
 
 socket.on("hitSuccess", (index) => {
     bullets.splice(index, 1);
+    bulletsForEnemies.splice(index, 1);
     console.log("hit");
 })
 
@@ -305,8 +373,7 @@ socket.on("hitBullet", (id, bullet, damage) => {
 socket.on("bulletInfo", (data) => {
     receivedBullets = [];
     data.forEach((bullet) => {
-        bullet.colour = 'red'
-        receivedBullets.push(new Bullet(bullet.x, bullet.y, bullet.angle, bullet.id, bullet.speed));
+        receivedBullets.push(new Bullet(bullet.x + offsetx, bullet.y + offsety, bullet.angle, bullet.id, bullet.speed));
     })
 })
 /*
@@ -363,8 +430,8 @@ function shootBullet() {
     const nozzleLength = 30; // The length of the nozzle
 
     // Calculate the bullet's starting position at the end of the nozzle
-    const bulletX = tank.x + Math.cos(tank.angle) * (tank.diameter / 2 + nozzleLength);
-    const bulletY = tank.y + Math.sin(tank.angle) * (tank.diameter / 2 + nozzleLength);
+    const bulletX = tank.mapPosition.x + Math.cos(tank.angle) * (tank.diameter / 2 + nozzleLength);
+    const bulletY = tank.mapPosition.y + Math.sin(tank.angle) * (tank.diameter / 2 + nozzleLength);
     bulletsForEnemies.push(new Bullet(bulletX, bulletY, tank.angle, socket.id, bulletSpeed));
 
     const bulletX2 = canvas.width / 2 + Math.cos(tank.angle) * (tank.diameter / 2 + nozzleLength);
@@ -403,6 +470,10 @@ function draw() {
     map.display();
     mazeBlocks.forEach((block) => {
         block.display();
+    })
+    boss.display()
+    dominators.forEach((dominator) => {
+        dominator.display();
     })
 
     requestAnimationFrame(draw);
@@ -474,3 +545,8 @@ let tickInterval = setInterval(tick, 10)
 let bulletInterval = setInterval(() => {
     reloaded = true;
 }, reloadSpeed);
+let regenerationInterval = setInterval(() => {
+    if(tank.health < tank.maxHealth && tank.regeneration > 0){
+    tank.health += 15
+    }
+}, 9500 - tank.regeneration * 1000)
