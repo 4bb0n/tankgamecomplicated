@@ -6,6 +6,7 @@ document.getElementById("healthBoost").addEventListener("click", () => {
     tank.health += 15;
     document.getElementById("healthBoost").value += 1;
     upgradesLeft -= 1
+    maxHealth += 15;
     }
     document.getElementById("upgradesLeft").innerHTML = upgradesLeft;
 })
@@ -67,5 +68,21 @@ document.getElementById("movementSpeed").addEventListener("click", () => {
     tank.speed += 0.5
     upgradesLeft -= 1
     document.getElementById("upgradesLeft").innerHTML = upgradesLeft;
+    }
+})
+
+document.getElementById("regeneration").addEventListener("click", () => {
+    const regeneration = document.getElementById("regeneration");
+    if(regeneration.value < regeneration.max && upgradesLeft > 0){
+    document.getElementById("regeneration").value += 1;
+    tank.regeneration += 1
+    upgradesLeft -= 1
+    document.getElementById("upgradesLeft").innerHTML = upgradesLeft;
+    clearInterval(regenerationInterval);
+    regenerationInterval = setInterval(() => {
+        if(tank.health < tank.maxHealth && tank.regeneration > 0){
+        tank.health += 10
+        }
+    }, 9500 - tank.regeneration * 1000)
     }
 })
