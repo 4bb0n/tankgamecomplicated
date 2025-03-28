@@ -4,6 +4,22 @@ const app = express();
 const server = http.createServer(app);
 const io = require('socket.io')(server);
 
+class MazeBlock{
+    constructor(x, y, width, height){
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    }
+    display(){
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = 'gray';
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+}
+
+let mazeBlocks = [new MazeBlock(0, 0, 200, 200), new MazeBlock(0, 0, 200, 200), new MazeBlock(0, 0, 200, 200), new MazeBlock(0, 0, 200, 200)];
+
 let players = {};
 let playersBullets = {};
 let bulletArray = []
@@ -11,6 +27,11 @@ const canvas = {
     width: 2400,
     height: 1400,
 };
+
+mazeBlocks.forEach(block => {
+    block.x = Math.random() * canvas.width;
+    block.y = Math.random() * canvas.height;
+})
 
 app.get('/eventListeners.js', (req, res) => {
     res.sendFile(__dirname + '/eventListeners.js');
@@ -63,6 +84,7 @@ io.on('connection', (socket) => {
     socket.on("died", (id) => {
         socket.broadcast.emit("enemyDied", id)
     })
+    socket.emit("S2C-MazeBlocks", mazeBlocks);
 });
 
 server.listen(3000, () => {
