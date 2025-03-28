@@ -29,10 +29,10 @@ class Tank {
     
 
     move() {
-        if (keys.has("ArrowUp") || keys.has("w")){this.y -= this.speed; enemies.forEach(enemy => {enemy.y += this.speed}); this.mapPosition.y = this.y; bullets.forEach(bullet => {bullet.y += this.speed});}
-        if (keys.has("ArrowDown") || keys.has("s")) {this.y += this.speed; enemies.forEach(enemy => {enemy.y -= this.speed}) ; this.mapPosition.y = this.y; bullets.forEach(bullet => {bullet.y -= this.speed});}
-        if (keys.has("ArrowLeft") || keys.has("a")) {this.x -= this.speed; enemies.forEach(enemy => {enemy.x += this.speed}); this.mapPosition.x = this.x; bullets.forEach(bullet => {bullet.x += this.speed});}
-        if (keys.has("ArrowRight") || keys.has("d")) {this.x += this.speed; enemies.forEach(enemy => {enemy.x -= this.speed}); this.mapPosition.x = this.x; bullets.forEach(bullet => {bullet.x -= this.speed});}
+        if (keys.has("ArrowUp") || keys.has("w")){this.y -= this.speed; enemies.forEach(enemy => {enemy.y += this.speed}); this.mapPosition.y = this.y; bullets.forEach(bullet => {bullet.y += this.speed}); mazeBlocks.forEach(block => {block.y += this.speed});}
+        if (keys.has("ArrowDown") || keys.has("s")) {this.y += this.speed; enemies.forEach(enemy => {enemy.y -= this.speed}) ; this.mapPosition.y = this.y; bullets.forEach(bullet => {bullet.y -= this.speed}); mazeBlocks.forEach(block => {block.y -= this.speed});}
+        if (keys.has("ArrowLeft") || keys.has("a")) {this.x -= this.speed; enemies.forEach(enemy => {enemy.x += this.speed}); this.mapPosition.x = this.x; bullets.forEach(bullet => {bullet.x += this.speed}); mazeBlocks.forEach(block => {block.x += this.speed});}
+        if (keys.has("ArrowRight") || keys.has("d")) {this.x += this.speed; enemies.forEach(enemy => {enemy.x -= this.speed}); this.mapPosition.x = this.x; bullets.forEach(bullet => {bullet.x -= this.speed}); mazeBlocks.forEach(block => {block.x -= this.speed});}
         if (keys.has(" ") && reloaded){
             shootBullet();
             reloaded = false;
@@ -61,7 +61,7 @@ class Tank {
     
         // Draw the nozzle correctly relative to the tank's center
         ctx.fillStyle = 'lightgray';
-        ctx.fillRect(this.diameter - 5, -5, 30, 10); // Adjusted position
+        ctx.fillRect(this.diameter - 5, -10, 30, 20); // Adjusted position
     
         ctx.restore();
     }
@@ -79,7 +79,7 @@ class Enemy {
         this.bodyDamage = bodyDamage;
         this.bulletSpeed = bulletSpeed;
         this.bulletPenetration = bulletPenetration;
-        this.colour = colour
+        this.colour = '#a5eb67'
         this.health = health;
         this.diameter = 30;
         this.id = id
@@ -108,7 +108,7 @@ class Enemy {
     
         // Draw the nozzle correctly relative to the tank's center
         ctx.fillStyle = 'lightgray';
-        ctx.fillRect(this.diameter - 5, -5, 30, 10); // Adjusted position
+        ctx.fillRect(this.diameter - 5, -10, 30, 20); // Adjusted position
     
         ctx.restore();
     }
@@ -141,13 +141,14 @@ class Bullet {
     }
 }
 class Map{
-    constructor(x, y, width, height, playerPosition, enemies){
+    constructor(x, y, width, height, playerPosition, enemies, mazeBlocks){
         this.width = width;
         this.height = height;
         this.x = x;
         this.y = y;
         this.playerPosition = playerPosition;
         this.enemies = enemies;
+        this.mazeBlocks = mazeBlocks;
     }
     display(){
         ctx.globalAlpha = 0.5
@@ -167,8 +168,27 @@ class Map{
             ctx.arc(enemy.mapPosition.x / 10 + this.x + 100, enemy.mapPosition.y / 10 + this.y + 100, 5, 0, 2 * Math.PI);
             ctx.fill();
         })
+
+    this.mazeBlocks.forEach(block => {
+        block.display();
+    });
     }
 }
+
+class MazeBlock{
+    constructor(x, y, width, height){
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    }
+    display(){
+        ctx.globalAlpha = 0.8;
+        ctx.fillStyle = 'gray';
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+}
+
 let mapCanvas = {
     width: 2400,
     height: 1400
@@ -180,8 +200,9 @@ let mapPosition = {
 let movementSpeed = 2;
 let bulletSpeed = 2;
 let enemies = [];
-let tank = new Tank(canvas.width / 2, canvas.height / 2, 50, 50, 0, 40, 2, bulletSpeed, 0, movementSpeed, 0, '#1db4de', socket.id);
-let map = new Map(canvas.width - 480, canvas.height - 280, 480, 280, tank.mapPosition, enemies);
+let mazeBlocks = []
+let tank = new Tank(canvas.width / 2, canvas.height / 2, 50, 50, 0, 140, 2, bulletSpeed, 0, movementSpeed, 0, '#1db4de', socket.id);
+let map = new Map(canvas.width - 480, canvas.height - 280, 480, 280, tank.mapPosition, enemies, mazeBlocks);
 let bullets = [];
 const keys = new Set(); // Store pressed keys
 let reloadSpeed = 400;
@@ -190,18 +211,19 @@ let reloaded = true;
 let receivedBullets = []
 let upgradesLeft = 42;
 let bulletsForEnemies = [];
-/*
-socket.on("bodyDmg", (firstPlayerId, firstHealth, secondPlayerId, secondHealth) => {
-    if(secondPlayerId == socket.id){
-        tank.health = secondHealth;
+
+canvas.onclick = () => {
+    if(reloaded){
+    shootBullet();
+    reloaded = false;
     }
-    enemies.forEach(enemy => {
-        if(enemy.id == firstPlayerId){
-            enemy.health = firstHealth;
-        }
+}
+socket.on("S2C-MazeBlocks", (data) => {
+    mazeBlocks = [];
+    data.forEach(block => {
+        mazeBlocks.push(new MazeBlock(block.x, block.y, block.width, block.height));
     })
 })
-*/
 
 socket.on("enemyDied", id => {
     enemies.forEach((enemy) => {
@@ -372,6 +394,9 @@ function draw() {
         bullet.display();
     });
     map.display();
+    mazeBlocks.forEach((block) => {
+        block.display();
+    })
 
     requestAnimationFrame(draw);
 }
@@ -424,19 +449,7 @@ function tick() {
             }
         })
     })
-    /*
-    enemies.forEach(enemy => {
-        let A = Math.abs(tank.x - enemy.x);
-        let O = Math.abs(tank.y - enemy.y)
-        let H = Math.sqrt(A * A + O * O)
-        if(H < enemy.diameter + tank.diameter){
-            enemy.health -= tank.bodyDamage;
-            tank.health -= enemy.bodyDamage;
-            socket.emit("bodyDmg", tank.id, tank.health, enemy.id, enemy.health)
-            console.log(enemy.health)
-        }
-    })
-    */
+    
     if(tank.health <= 0){
         tank.mapPosition.x = 100000
         tank.mapPosition.y = 100000
@@ -449,7 +462,7 @@ function tick() {
         socket.emit("bulletInfo", bulletsForEnemies)
         socket.emit("getEnemies");
 }
-let tickInterval = setInterval(tick, 25)
+let tickInterval = setInterval(tick, 10)
 let bulletInterval = setInterval(() => {
     reloaded = true;
 }, reloadSpeed);
