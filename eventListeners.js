@@ -79,6 +79,15 @@ function reloadSpeedFunction() {
     upgradesLeft -= 1
     document.getElementById("upgradesLeft").innerHTML = upgradesLeft;
     }
+    clearInterval(reloadInterval);
+    reloadInterval = setInterval(() => {
+        if(reloaded){
+        reloaded = false;
+        setTimeout(() => {
+            reloaded = true;
+        }, reloadSpeed)
+        }
+    }, reloadSpeed)
 }
 function movementSpeedFunction(){
     const movementSpeed = document.getElementById("movementSpeed");
