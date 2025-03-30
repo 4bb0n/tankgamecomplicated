@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lobby</title>
+    <style>
+        body{
+            text-align: center;
+        }
+        button{
+            margin: 5px;
+            padding-left: 20px;
+            padding-right: 20px;
+            width: 300px;
+            height: 40px;
+            font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        h1{
+            font-family: sans-serif;
+        }
+        #players{
+            font-family: sans-serif;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lobby</h1>
+    <div id="gameModes">
+        <button id="journey">Journey / Adventure</button><br>
+        <button id="domination">Domination</button><br>
+        <button id="FFA">FFA</button><br>
+    </div>
+    <p id="players">Players: <b>0</b></p>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.js"></script>
+    <script src="/lobby.js"></script>
+    <script src="index.cjs"></script>
+</body>
+</html>
