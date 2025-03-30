@@ -928,7 +928,7 @@ function draw() {
 
     if (traveled > 800) {
         bullets.splice(index, 1);
-        bulletForEnemies.splice(index, 1);
+        bulletsForEnemies.splice(index, 1);
     }
     bullet.update()
 });
