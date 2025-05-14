@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Game</title>
+    <style>
+        body{
+            text-align: center;
+        }
+        #upgrades{
+            position:absolute;
+            right: 10px;
+        }
+        canvas{
+            margin-right: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div id="upgrades">
+        <progress id="bodyDamage" value="0" max="9"></progress>
+        <p>body damage</p>
+        <progress id="healthBoost" value="0" max="9"></progress>
+        <p>health boost</p>
+        <progress id="bulletSpeed" value="0" max="9"></progress>
+        <p>bullet speed</p>
+        <progress id="bulletHealth" value="0" max="9"></progress>
+        <p>bullet health</p>
+        <progress id="bulletPenetration" value="0" max="9"></progress>
+        <p>bullet penetration</p>
+        <progress id="bulletDamage" value="0" max="9"></progress>
+        <p>bullet damage</p>
+        <progress id="reload" value="0" max="9"></progress>
+        <p>reload speed</p>
+        <progress id="movementSpeed" value="0" max="9"></progress>
+        <p>movement speed</p>
+        <progress id="regeneration" value="0" max="9"></progress>
+        <p>regeneration</p>
+        </div>
+    <canvas id="canvas" width="1200px" height="700px" style="border: 1px solid;"></canvas>
+    <p id="upgradesLeft">48</p>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.js" defer></script>
+    <script src="/FFA.js" defer></script>
+    <script src="/eventListeners.js"></script>
+</body>
+</html>
