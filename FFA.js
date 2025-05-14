@@ -1,0 +1,2 @@
+let dominators = [];
+let bosses = []
