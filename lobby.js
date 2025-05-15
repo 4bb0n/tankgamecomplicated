@@ -10,3 +10,6 @@ document.getElementById("journey").addEventListener("click", () => {
 document.getElementById("domination").addEventListener("click", () => {
     window.open('/domination', '_self');
 });
+document.getElementById("FFA").addEventListener("click", () => {
+    window.open('/FFA', '_self');
+});
