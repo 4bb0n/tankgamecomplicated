@@ -79,14 +79,9 @@ function reloadSpeedFunction() {
     upgradesLeft -= 1
     document.getElementById("upgradesLeft").innerHTML = upgradesLeft;
     }
-    clearInterval(reloadInterval);
-    reloadInterval = setInterval(() => {
-        if(reloaded){
-        reloaded = false;
-        setTimeout(() => {
-            reloaded = true;
-        }, reloadSpeed)
-        }
+    clearInterval(bulletInterval);
+    bulletInterval = setInterval(() => {
+        reloaded = true
     }, reloadSpeed)
 }
 function movementSpeedFunction(){
