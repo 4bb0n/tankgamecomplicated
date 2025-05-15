@@ -46,6 +46,10 @@ app.get('/journey', (req, res) => {
 app.get('/lobby.js', (req, res) => {
     res.sendFile(__dirname + '/lobby.js');
 })
+app.get('/FFA', (req, res) => res.sendFile(__dirname + '/FFA.html'));
+app.get('/FFA.js', (req, res) => {
+    res.sendFile(__dirname + '/FFA.js');
+})
 
 app.get('/eventListeners.js', (req, res) => {
     res.sendFile(__dirname + '/eventListeners.js');
@@ -56,6 +60,12 @@ app.get('/', (req, res) => {
 });
 app.get('/index.js', (req, res) => {
     res.sendFile(__dirname + '/index.js');
+})
+app.get('/mechanics.js', (req, res) => {
+    res.sendFile(__dirname + '/mechanics.js');
+})
+app.get('/socket.io.js', (req, res) => {
+    res.sendFile(__dirname + '/socket.io.js');
 })
 
 io.on('connection', (socket) => {
